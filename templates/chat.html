@@ -326,7 +326,7 @@
           const payload = { contents: chatHistory };
           const apiKey = geminiApiKey;
           // Changed endpoint for streaming
-          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${apiKey}`;
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
           const response = await fetch(apiUrl, {
             method: "POST",
@@ -342,50 +342,14 @@
               }`
             );
           }
+          const data = await response.json();
 
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder("utf-8");
-          let done, value;
-
-          // Loop through the stream
-          while (true) {
-            ({ value, done } = await reader.read());
-            if (done) break;
-
-            // Decode chunk and parse potential JSON
-            const chunk = decoder.decode(value, { stream: true });
-            // Gemini API streaming responses are often newline-delimited JSON objects
-            // We need to handle incomplete JSON objects that might arrive in a chunk
-            const jsonStrings = chunk.split("\n").filter(Boolean); // Split by newline and remove empty strings
-
-            for (const jsonStr of jsonStrings) {
-              try {
-                const data = JSON.parse(jsonStr);
-                if (
-                  data.candidates &&
-                  data.candidates.length > 0 &&
-                  data.candidates[0].content &&
-                  data.candidates[0].content.parts &&
-                  data.candidates[0].content.parts.length > 0
-                ) {
-                  const chunkText = data.candidates[0].content.parts[0].text;
-                  fullAiResponse += chunkText;
-                  // Update the text content of the existing AI message bubble
-                  aiMessageParagraph.textContent = fullAiResponse;
-                  chatMessages.scrollTop = chatMessages.scrollHeight; // Keep scrolling to bottom
-                }
-              } catch (e) {
-                console.warn(
-                  "Could not parse JSON chunk (likely incomplete):",
-                  jsonStr,
-                  e
-                );
-                // If it's an incomplete JSON, it will be handled with the next chunk
-                // For simplicity, we are not buffering partial JSON. In a more robust
-                // implementation, you might buffer and try parsing when new chunks arrive.
-              }
-            }
-          }
+          const chunkText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (chunkText) {
+            fullAiResponse += chunkText;
+            aiMessageParagraph.textContent = fullAiResponse;
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
           // After streaming is complete, update chat history with the full response
           chatHistory.push({
