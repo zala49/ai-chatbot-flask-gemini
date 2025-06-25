@@ -15,6 +15,8 @@ from flask import (
 )
 from config import config_by_name
 
+from google import genai
+
 app = Flask(__name__)
 
 FLASK_ENV = os.environ.get("FLASK_ENV", "development")
@@ -58,14 +60,24 @@ def generate_response():
     The Gemini API key is now passed from the session to the frontend.
     """
     user_message = request.json.get("message")
+    gemini_api_key = request.json.get("apiKey")
+    print(gemini_api_key, 'gemini_api_key')
+    
+    if not gemini_api_key:
+        return jsonify({"error": "No Gemini API key in session"}), 403
+    
     if not user_message:
         return jsonify({"error": "No message provided"}), 400
 
-    ai_response_text = (
-        f"AI received: '{user_message}' (Frontend is handling Gemini API call directly)"
-    )
-
-    return jsonify({"response": ai_response_text})
+    try:
+        client = genai.Client(api_key=gemini_api_key)
+        
+        response = client.models.generate_content(
+            model="gemini-1.5-flash", contents=user_message
+        )
+        return jsonify({"response": response.text})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/logout")
