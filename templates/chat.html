@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom scrollbar for better aesthetics */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+      }
+
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+      }
+
+      /* Smooth textarea resizing */
+      textarea {
+        transition: height 0.2s ease-in-out;
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4 font-sans antialiased"
+  >
+    <div
+      class="w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl border border-gray-50 bg-white/95 backdrop-blur-sm rounded-xl overflow-hidden"
+    >
+      <!-- Header -->
+      <div
+        class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 border-b border-gray-100 bg-white"
+      >
+        <div class="flex items-center gap-3">
+          <div class="p-2 bg-blue-100 rounded-lg shadow-sm">
+            <svg
+              class="w-6 h-6 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 20l9-5-9-5-9 5 9 5z" />
+              <path d="M12 12V4l9 5-9 5z" />
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-gray-800">AI</h1>
+        </div>
+
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto"
+        >
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <div class="relative flex-1 sm:w-64">
+              <svg
+                class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 17v-6m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <input
+                type="password"
+                id="geminiApiKeyInput"
+                placeholder="Enter Gemini API Key"
+                class="pl-10 pr-4 py-2 text-sm w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              />
+            </div>
+            <button
+              id="saveApiKeyBtn"
+              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md shadow-sm transition duration-200 ease-in-out transform hover:scale-105"
+            >
+              Save Key
+            </button>
+          </div>
+          <div class="flex items-center gap-3">
+            <span
+              id="geminiKeyStatus"
+              class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium"
+              >Gemini Key: Missing</span
+            >
+            <button
+              id="logoutBtn"
+              class="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded hover:bg-red-100 text-sm shadow-sm transition duration-200 ease-in-out transform hover:scale-105"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat Messages -->
+      <div
+        id="chatMessages"
+        class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar bg-gray-50"
+      >
+        <div
+          id="apiKeyWarning"
+          class="bg-amber-50 border border-amber-200 rounded-lg p-4 transition-all duration-300 ease-in-out"
+        >
+          <div class="flex items-center gap-2 text-amber-800 text-sm">
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 17v-6m0-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Warning: Gemini AI Key is missing. Please enter your key to enable
+            the AI.
+          </div>
+        </div>
+
+        <!-- Initial AI message -->
+        <div class="flex items-start gap-3">
+          <div class="p-2 rounded-full bg-blue-100 flex-shrink-0">
+            <svg
+              class="w-4 h-4 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 20l9-5-9-5-9 5 9 5z" />
+              <path d="M12 12V4l9 5-9 5z" />
+            </svg>
+          </div>
+          <div class="max-w-[80%] text-left">
+            <div
+              class="inline-block p-4 rounded-2xl bg-blue-50 text-gray-800 rounded-bl-md shadow-sm"
+            >
+              <p class="text-sm">
+                Hello! I'm your AI. How can I assist you today?
+              </p>
+            </div>
+            <p class="text-xs text-gray-500 mt-1 px-2">AI</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="border-t border-gray-100 p-6 bg-white">
+        <div class="flex items-end gap-3">
+          <div class="flex-1">
+            <textarea
+              id="messageInput"
+              placeholder="Ask me anything..."
+              class="min-h-[44px] max-h-[120px] resize-none border border-gray-300 rounded-xl w-full p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              disabled
+            ></textarea>
+          </div>
+          <button
+            id="sendMessageBtn"
+            class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-xl text-sm shadow-md transition duration-200 ease-in-out transform hover:scale-105 disabled:bg-blue-300 disabled:cursor-not-allowed"
+            disabled
+          >
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path d="M22 2L11 13" />
+              <path d="M22 2L15 22 11 13 2 9l20-7z" />
+            </svg>
+          </button>
+        </div>
+        <p
+          id="chatDisabledWarning"
+          class="text-sm text-gray-500 mt-2 text-center"
+        >
+          Please provide a Gemini AI Key to start chatting
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // Constants for DOM elements and local storage key
+      const geminiApiKeyInput = document.getElementById("geminiApiKeyInput");
+      const saveApiKeyBtn = document.getElementById("saveApiKeyBtn");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const geminiKeyStatus = document.getElementById("geminiKeyStatus");
+      const apiKeyWarning = document.getElementById("apiKeyWarning");
+      const chatMessages = document.getElementById("chatMessages");
+      const messageInput = document.getElementById("messageInput");
+      const sendMessageBtn = document.getElementById("sendMessageBtn");
+      const chatDisabledWarning = document.getElementById(
+        "chatDisabledWarning"
+      );
+
+      const LOCAL_STORAGE_KEY = "geminiApiKey";
+      let geminiApiKey = "";
+      let chatHistory = []; // Stores conversation for Gemini API
+
+      /**
+       * Adds a message bubble to the chat interface.
+       * @param {string} sender - 'user' or 'ai'.
+       * @param {string} message - The message text.
+       * @param {string} timestamp - Optional timestamp (e.g., '10:30 AM').
+       * @returns {HTMLElement} The created message bubble element.
+       */
+      function displayMessage(sender, message, timestamp = "") {
+        const messageWrapper = document.createElement("div");
+        messageWrapper.className = `flex items-start gap-3 ${
+          sender === "user" ? "justify-end" : ""
+        }`;
+
+        const avatar = document.createElement("div");
+        avatar.className = `p-2 rounded-full ${
+          sender === "user"
+            ? "bg-indigo-100 order-2"
+            : "bg-blue-100 flex-shrink-0"
+        }`;
+        avatar.innerHTML =
+          sender === "user"
+            ? '<svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>'
+            : '<svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20l9-5-9-5-9 5 9 5z"/><path d="M12 12V4l9 5-9 5z"/></svg>';
+
+        const messageContent = document.createElement("div");
+        messageContent.className = `max-w-[80%] ${
+          sender === "user" ? "text-right" : "text-left"
+        }`;
+
+        const bubble = document.createElement("div");
+        bubble.className = `inline-block p-4 rounded-2xl shadow-sm ${
+          sender === "user"
+            ? "bg-indigo-500 text-white rounded-br-md"
+            : "bg-blue-50 text-gray-800 rounded-bl-md"
+        }`;
+
+        const messageParagraph = document.createElement("p");
+        messageParagraph.className = "text-sm";
+        messageParagraph.textContent = message; // Set textContent for initial message
+        bubble.appendChild(messageParagraph);
+
+        const timeEl = document.createElement("p");
+        timeEl.className = `text-xs text-gray-500 mt-1 px-2 ${
+          sender === "user" ? "text-right" : "text-left"
+        }`;
+        timeEl.textContent =
+          timestamp || (sender === "user" ? "You" : "AI"); // Use sender name if no timestamp
+
+        messageContent.appendChild(bubble);
+        messageContent.appendChild(timeEl);
+
+        messageWrapper.appendChild(avatar);
+        messageWrapper.appendChild(messageContent);
+
+        chatMessages.appendChild(messageWrapper);
+
+        // Scroll to the bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        return messageParagraph; // Return the paragraph element for streaming
+      }
+
+      /**
+       * Updates the UI based on the presence of the Gemini API key.
+       */
+      function updateApiKeyStatus() {
+        geminiApiKey = localStorage.getItem(LOCAL_STORAGE_KEY) || "";
+
+        if (geminiApiKey) {
+          geminiKeyStatus.className =
+            "bg-green-100 text-green-800 px-2 py-1 rounded text-sm font-medium";
+          geminiKeyStatus.textContent = "Gemini Key: Present";
+          apiKeyWarning.classList.add("hidden"); // Hide warning
+          messageInput.disabled = false;
+          sendMessageBtn.disabled = false;
+          chatDisabledWarning.classList.add("hidden"); // Hide chat disabled warning
+        } else {
+          geminiKeyStatus.className =
+            "bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-medium";
+          geminiKeyStatus.textContent = "Gemini Key: Missing";
+          apiKeyWarning.classList.remove("hidden"); // Show warning
+          messageInput.disabled = true;
+          sendMessageBtn.disabled = true;
+          chatDisabledWarning.classList.remove("hidden"); // Show chat disabled warning
+        }
+        geminiApiKeyInput.value = ""; // Clear input field after status update
+      }
+
+      /**
+       * Handles sending a message to the Gemini API with streaming.
+       */
+      async function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+        if (!geminiApiKey) {
+          // Using a custom message box instead of alert()
+          showMessageBox(
+            "Please provide a Gemini API Key to start chatting.",
+            "Warning"
+          );
+          return;
+        }
+
+        // Disable input and button during API call
+        messageInput.disabled = true;
+        sendMessageBtn.disabled = true;
+        messageInput.value = ""; // Clear message input immediately
+
+        displayMessage("user", message);
+        chatHistory.push({ role: "user", parts: [{ text: message }] });
+
+        // Add a temporary loading message for AI and get its reference
+        const aiMessageParagraph = displayMessage("ai", "Thinking...");
+        let fullAiResponse = ""; // To accumulate the full response for chatHistory
+
+        try {
+          const payload = { contents: chatHistory };
+          const apiKey = geminiApiKey;
+          // Changed endpoint for streaming
+          const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?key=${apiKey}`;
+
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              `API error: ${response.status} ${response.statusText} - ${
+                errorData.error.message || "Unknown error"
+              }`
+            );
+          }
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let done, value;
+
+          // Loop through the stream
+          while (true) {
+            ({ value, done } = await reader.read());
+            if (done) break;
+
+            // Decode chunk and parse potential JSON
+            const chunk = decoder.decode(value, { stream: true });
+            // Gemini API streaming responses are often newline-delimited JSON objects
+            // We need to handle incomplete JSON objects that might arrive in a chunk
+            const jsonStrings = chunk.split("\n").filter(Boolean); // Split by newline and remove empty strings
+
+            for (const jsonStr of jsonStrings) {
+              try {
+                const data = JSON.parse(jsonStr);
+                if (
+                  data.candidates &&
+                  data.candidates.length > 0 &&
+                  data.candidates[0].content &&
+                  data.candidates[0].content.parts &&
+                  data.candidates[0].content.parts.length > 0
+                ) {
+                  const chunkText = data.candidates[0].content.parts[0].text;
+                  fullAiResponse += chunkText;
+                  // Update the text content of the existing AI message bubble
+                  aiMessageParagraph.textContent = fullAiResponse;
+                  chatMessages.scrollTop = chatMessages.scrollHeight; // Keep scrolling to bottom
+                }
+              } catch (e) {
+                console.warn(
+                  "Could not parse JSON chunk (likely incomplete):",
+                  jsonStr,
+                  e
+                );
+                // If it's an incomplete JSON, it will be handled with the next chunk
+                // For simplicity, we are not buffering partial JSON. In a more robust
+                // implementation, you might buffer and try parsing when new chunks arrive.
+              }
+            }
+          }
+
+          // After streaming is complete, update chat history with the full response
+          chatHistory.push({
+            role: "model",
+            parts: [{ text: fullAiResponse }],
+          });
+        } catch (error) {
+          console.error("Error calling Gemini API:", error);
+          // Update the AI message bubble with the error
+          aiMessageParagraph.textContent = `Error: ${
+            error.message ||
+            "Failed to connect to the AI. Please check your API key and network."
+          }`;
+          // Remove 'Thinking...' if it's still there
+          if (aiMessageParagraph.textContent.includes("Thinking...")) {
+            aiMessageParagraph.textContent = "Error: Failed to get response.";
+          }
+        } finally {
+          // Re-enable input and button
+          messageInput.disabled = false;
+          sendMessageBtn.disabled = false;
+          messageInput.focus(); // Focus back on input
+        }
+      }
+
+      /**
+       * Displays a custom message box instead of alert().
+       * @param {string} message - The message to display.
+       * @param {string} title - The title of the message box.
+       */
+      function showMessageBox(message, title = "Message") {
+        const messageBox = document.createElement("div");
+        messageBox.className =
+          "fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50";
+        messageBox.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                    <h3 class="text-lg font-bold mb-4 text-gray-800">${title}</h3>
+                    <p class="text-sm text-gray-700 mb-6">${message}</p>
+                    <button id="messageBoxOkBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition duration-200 ease-in-out">OK</button>
+                </div>
+            `;
+        document.body.appendChild(messageBox);
+
+        document
+          .getElementById("messageBoxOkBtn")
+          .addEventListener("click", () => {
+            messageBox.remove();
+          });
+      }
+
+      // Event Listeners
+      document.addEventListener("DOMContentLoaded", updateApiKeyStatus); // Initial UI update
+
+      saveApiKeyBtn.addEventListener("click", () => {
+        const key = geminiApiKeyInput.value.trim();
+        if (key) {
+          localStorage.setItem(LOCAL_STORAGE_KEY, key);
+          updateApiKeyStatus();
+        } else {
+          showMessageBox("Please enter a valid API key.", "Input Required");
+        }
+      });
+
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        chatHistory = []; // Clear chat history on logout
+        // Clear all messages except the initial AI greeting
+        const messageBubbles = chatMessages.querySelectorAll(
+          ".flex.items-start.gap-3:not(:first-child)"
+        );
+        messageBubbles.forEach((bubble) => bubble.remove());
+        updateApiKeyStatus();
+        displayMessage(
+          "ai",
+          "You have been logged out. I'm your AI. How can I assist you today?"
+        );
+      });
+
+      sendMessageBtn.addEventListener("click", sendMessage);
+
+      messageInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault(); // Prevent new line in textarea
+          sendMessage();
+        }
+      });
+
+      // Adjust textarea height automatically
+      messageInput.addEventListener("input", () => {
+        messageInput.style.height = "auto";
+        messageInput.style.height = messageInput.scrollHeight + "px";
+      });
+    </script>
+  </body>
+</html>

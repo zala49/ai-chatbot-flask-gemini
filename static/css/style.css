@@ -1,0 +1,6 @@
+body {
+    /* Base styles, overridden by specific page styles if needed */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
